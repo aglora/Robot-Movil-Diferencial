@@ -1,0 +1,148 @@
+#include "Arduino.h"
+#include "ModulesCarDrivers.hpp"
+#include "TimerOne.h"
+
+/*-----------------DEFINICIONES PARA PARÁMETROS----------------------*/
+// Pines de conexionado
+//-Motores-
+#define pinENA 5
+#define pinENB 6
+#define pinIN1 2
+#define pinIN2 4
+#define pinIN3 8
+#define pinIN4 7
+//-Ultrasonidos-
+#define EchoPinA 13
+#define TriggerPinA 12
+#define EchoPinB 14
+#define TriggerPinB 15
+//-Encoders-
+#define pinEncoder1 20;
+#define pinEncoder2 21;
+#define npolos 8   //Número de cambios de tensión correspondientes a una vuelta (doble de ranuras del encoder)
+#define reductora 48
+//-Controlador-
+#define puntoEquilibrio 45   // PWM mínimo que se aplica para estar cercanos al movimiento del robot
+#define referenciaInicial 1.5 // referencia inicial de control de velocidad
+#define Kp 40
+#define Ki 0.02
+#define Kd 0
+
+/*---------------VARIABLES GLOBALES-------------------*/
+int ticksA = 0;
+int ticksB = 0;
+int wA = 0, wB = 0;
+bool sentidoGiro = true; //true=>forward, false=>backward
+const int ENC1 = pinEncoder1;
+const int ENC2 = pinEncoder2;
+unsigned long TiempoActualEnc, TiempoTranscurridoEnc, TiempoAnteriorEnc = 0;
+
+/*------------------CABECERAS DE FUNCIONES/SUBRUTINAS  Y VARIABLES GLOBALES ASOCIADAS----------------------------------------*/
+int eligeControl(float Medida, Controlador &ControlMotoresNear, Controlador &ControlMotoresFar, unsigned int referencia);
+int aplicaSignal(movimientoCoche &motor, int signalControl);
+void calculaVel(void);
+void ISR_incrTicksA();
+void ISR_incrTicksB();
+
+/*========================================================================================================================*/
+
+void setup()
+{
+  // Configuración pines ultrasonidos
+  pinMode(TriggerPinA, OUTPUT);
+  pinMode(EchoPinA, INPUT);
+  pinMode(TriggerPinB, OUTPUT);
+  pinMode(EchoPinB, INPUT);
+
+  // Configuración pines motor
+  pinMode(pinIN1, OUTPUT);
+  pinMode(pinIN2, OUTPUT);
+  pinMode(pinIN3, OUTPUT);
+  pinMode(pinIN4, OUTPUT);
+  pinMode(pinENA, OUTPUT);
+  pinMode(pinENB, OUTPUT);
+    
+  //Configuración pines Encoder como interrupciones
+  Timer1.attachInterrupt(ISR_calculateAngSpeed) ;
+  attachInterrupt(digitalPinToInterrupt(ENC1), ISR_incrTicksA, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENC2), ISR_incrTicksB, CHANGE);
+
+  // Configuración puerto bluetooth para telemetría
+  Serial1.begin(9600);
+
+  // Configuración puerto usb para depuración
+  // Serial.begin(9600);
+}
+
+void loop()
+{
+  static bool powerON = false;
+  static Bluetooth moduloBluetooth;
+  static float RefVel = referenciaInicial;
+  
+  static Controlador ControlVelocidadA(Kp, Ki, Kd, 0, 255);
+  static Controlador ControlVelocidadB(Kp, Ki, Kd, 0, 255);
+  static int PWM_A, PWM_B;
+  static movimientoCoche motorA(pinENA, pinIN1, pinIN2);
+  static movimientoCoche motorB(pinENB, pinIN3, pinIN4);
+
+  do
+  {
+    moduloBluetooth.recibeDatosBluetooth(&RefVel, &powerON, ControlVelocidadA, motorA, motorB); // leer si se ha recibido alguna orden
+  } while (!powerON);
+  calculaVel();
+  PWM_A = ControlVelocidadA.calcularSalida(RefVel-wA);
+  PWM_B = ControlVelocidadB.calcularSalida(RefVel-wB);
+  PWM_A = aplicaSignal(motorA,PWM_A);
+  PWM_B = aplicaSignal(motorB,PWM_B);
+  moduloBluetooth.DebugValuesBluetooth(wA,wB,RefVel,PWM_A,PWM_B);
+  delay(200);
+}
+
+void ISR_incrTicksA()
+{
+    ticksA++;
+}
+
+void ISR_incrTicksB()
+{
+    ticksB++;
+}
+
+void ISR_calculateAngSpeed(){
+  if(sentidoGiro){
+  wA = ((float)ticksA*1000.0*60.0)/((float)npolos*(float)reductora*50.0); //número de vueltas/tiempo entre medición [rps] -> *60 [rpm]
+  wB = ((float)ticksA*1000.0*60.0)/((float)npolos*(float)reductora*50.0);
+  ticksA = 0;
+  ticksB = 0;
+  }
+  else {
+  wA = -((float)ticksA/(float)(npolos*reductora))/(TiempoTranscurrido/1000)*60;
+  wB = -((float)ticksB/(float)(npolos*reductora))/(TiempoTranscurrido/1000)*60;
+  ticksA = 0;
+  ticksB = 0;
+  }
+}
+
+int aplicaSignal(movimientoCoche &motor, int signalControl)
+{
+  int PWM;
+  if (signalControl > 0)
+  {
+    sentidoGiro = true;
+    PWM = signalControl + puntoEquilibrio;
+    motor.forward(PWM);
+  }
+  else if (signalControl < 0)
+  {
+    sentidoGiro = false;
+    PWM = abs(signalControl) + puntoEquilibrio;
+    motor.backward(PWM);
+  }
+  else
+  {
+    PWM = 0;
+    motor.stop();
+  }
+  return PWM;
+}
