@@ -56,4 +56,6 @@ Se pretende desarrollar un nuevo modo de alcance de puntos objetivos dados
 con detección y evitación de obstáculos. También se propone una aplicación
 alternativa de seguimiento de carriles con paredes.
 
+<img src="https://github.com/aglora/Robot-Movil-Diferencial/blob/main/Conexionado-Proyecto.png" width="400">
+
 
