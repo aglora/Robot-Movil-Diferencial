@@ -60,6 +60,8 @@ con detección y evitación de obstáculos. También se propone una aplicación
 alternativa de seguimiento de carriles con paredes.
 
 <div style="display: flex; flex-direction: row;">
-  <img src="https://github.com/aglora/Robot-Movil-Diferencial/blob/main/Conexionado-Proyecto.png" width="400" />
-  <img src="https://github.com/aglora/Robot-Movil-Diferencial/blob/main/TelemetryViewer.jpg" width="400" />
+  <img src="https://github.com/aglora/Robot-Movil-Diferencial/blob/main/carril.png" width="400" />
+  <img src="https://github.com/aglora/Robot-Movil-Diferencial/blob/main/obstaculos.png" width="400" />
 </div>
+
+
