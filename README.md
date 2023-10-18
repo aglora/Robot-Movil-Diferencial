@@ -2,8 +2,8 @@
 Proyecto de construcción hardware y software de un robot móvil con ruedas en configuración diferencial y el control realizado del mismo para conseguir distintos modos de funcionamiento mediante realimentación sensorial.
 
 <div style="display: flex; flex-direction: row;">
-  <img src="https://github.com/aglora/Robot-Movil-Diferencial/blob/main/FotoRobotMovil.jpg" width="500" />
-  <img src="https://github.com/aglora/Robot-Movil-Diferencial/blob/main/Vista-aerea-robot.jpg" width="500" />
+  <img src="https://github.com/aglora/Robot-Movil-Diferencial/blob/main/FotoRobotMovil.jpg" width="400" />
+  <img src="https://github.com/aglora/Robot-Movil-Diferencial/blob/main/Vista-aerea-robot.jpg" width="400" />
 </div>
 
 Toda la documentación está detallada en la memoria de trabajo, en la cual se explican las técnicas de control implementadas, esquemas usados, montaje físico y explicaciones principales de los códigos usados.
