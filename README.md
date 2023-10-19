@@ -66,3 +66,7 @@ alternativa de seguimiento de carriles con paredes.
   <img src="https://github.com/aglora/Robot-Movil-Diferencial/blob/main/obstaculos.png" width="400" />
 </div>
 
+## Authors
+[RoboticsLeon](https://github.com/RoboticsLeon) //
+[isaacrg19](https://github.com/isaacrg19) //
+[aglora](https://github.com/aglora) 
